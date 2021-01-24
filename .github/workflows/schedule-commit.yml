@@ -41,7 +41,7 @@ jobs:
         shell: Rscript {0}
       - name: Generate data
         run: |
-          dkc::data_collect()
+          source("R/data_collect.R")
         shell: Rscript {0} 
       - name: Commit files
         run: |
