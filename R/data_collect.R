@@ -49,8 +49,8 @@ data_players <- function(u, datetime){
   players[["tag"]] <- table[["Tag"]]
   players[["trophies"]] <- as.numeric(gsub(",", "", table[["Trophies"]]))
   players[["level"]] <- table[["Level"]]
-  players[["donated"]] <- table[["Donated"]]
-  players[["received"]] <- table[["Received"]]
+  players[["donated"]] <- as.numeric(gsub(",", "", table[["Donated"]]))
+  players[["received"]] <- as.numeric(gsub(",", "", table[["Received"]]))
 
   players
 }
