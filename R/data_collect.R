@@ -1,3 +1,7 @@
+library("magrittr")
+library("rvest")
+library("dplyr")
+
 # function
 get_into_list <- function(l, element){
   as.vector(do.call("rbind", lapply(l, "[[", element)))
@@ -14,7 +18,7 @@ url <- c('https://royaleapi.com/clan/P8JYU22U',
          'https://royaleapi.com/clan/YP0VLRU2')
 
 data_players <- function(u, datetime){
-  raw_page <- read_html(u, encoding = "UTF8")
+  raw_page <- xml2::read_html(u, encoding = "UTF8")
   clan_name <- gsub("[\n]", "", raw_page %>%
                       rvest::html_nodes("h1") %>%
                       rvest::html_text())
@@ -67,7 +71,7 @@ db_checkpoint <- readRDS("data/clan_wars.rds")
 url <- paste0(url, '/war/analytics')
 
 data_warclan <- function(u, datetime){
-  raw_page <- read_html(u, encoding = "UTF8")
+  raw_page <- xml2::read_html(u, encoding = "UTF8")
   clan_name <- gsub("[\n]", "", raw_page %>% html_nodes("h1") %>% html_text())
 
   table <- raw_page %>% rvest::html_nodes("table") %>%
