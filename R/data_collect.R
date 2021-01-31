@@ -68,7 +68,7 @@ saveRDS(db_clan, "data/clan_players.rds")
 
 db_checkpoint <- readRDS("data/clan_wars.rds")
 
-url <- paste0(url, '/war/analytics')
+url_war <- paste0(url, '/war/analytics')
 
 data_warclan <- function(u, datetime){
   raw_page <- xml2::read_html(u, encoding = "UTF8")
@@ -92,9 +92,9 @@ data_warclan <- function(u, datetime){
   warclan
 }
 
-warclan3e <- data_warclan(url[1], datetime = datetime)
-warclan2e <- data_warclan(url[2], datetime = datetime)
-warclan1e <- data_warclan(url[3], datetime = datetime)
+warclan3e <- data_warclan(url_war[1], datetime = datetime)
+warclan2e <- data_warclan(url_war[2], datetime = datetime)
+warclan1e <- data_warclan(url_war[3], datetime = datetime)
 
 db_warclan <- dplyr::bind_rows(db_checkpoint, warclan3e, warclan2e, warclan1e) %>% unique()
 db_warclan <- dplyr::arrange(db_warclan, datetime, desc(clan))
@@ -105,3 +105,63 @@ db_warclan[db_warclan$player %in% unique(db_clan[db_clan$date == maxdate, "playe
 db_warclan[is.na(db_warclan$member), "member"] <- FALSE
 
 saveRDS(db_warclan, "data/clan_wars.rds")
+
+# CURRENT WAR CLAN ----
+
+db_checkpoint <- readRDS("data/clan_warcurrent.rds")
+
+url_war <- paste0(url, '/war/race')
+
+data_warcurrent <- function(u, datetime){
+  raw_page <- read_html(u, encoding = "UTF8")
+  clan_name <- gsub("[\n]", "", raw_page %>% html_nodes("h1") %>% html_text())
+
+  table <- raw_page %>% rvest::html_nodes("table") %>%
+    rvest::html_table()
+  table <- as.data.frame(table[[2L]])
+
+  warclan <- data.frame(date = datetime,
+                        clan = clan_name,
+                        player = rep(NA, dim(table)[1]),
+                        role = NA,
+                        boat_attack = NA,
+                        repair = NA,
+                        fame = NA,
+                        contribution = NA)
+
+  # Cleaning table
+  warclan[["player"]] <- strsplit(table[,2], "[\n]") %>%
+    get_into_list(1)
+  warclan[["player"]] <- gsub('\\[*email.protected*\\]', "M@", warclan[["player"]])
+
+  warclan[["role"]] <- strsplit(table[,2], "[\n]") %>%
+    get_into_list(4)
+
+  warclan[["boat_attack"]] <- strsplit(table[,2], "[\n]") %>%
+    get_into_list(8)
+
+  warclan[["repair"]] <- strsplit(table[,2], "[\n]") %>%
+    get_into_list(9)
+
+  warclan[["fame"]] <- strsplit(table[,2], "[\n]") %>%
+    get_into_list(10)
+
+  warclan[["contribution"]] <- strsplit(table[,2], "[\n]") %>%
+    get_into_list(11)
+
+  warclan[["boat_attack"]] <- as.numeric(gsub(",", "", warclan[["boat_attack"]]))
+  warclan[["repair"]] <- as.numeric(gsub(",", "", warclan[["repair"]]))
+  warclan[["fame"]] <- as.numeric(gsub(",", "", warclan[["fame"]]))
+  warclan[["contribution"]] <- as.numeric(gsub(",", "", warclan[["contribution"]]))
+
+  warclan
+}
+
+warclan3e <- data_warcurrent(url_war[1], datetime = datetime)
+warclan2e <- data_warcurrent(url_war[2], datetime = datetime)
+warclan1e <- data_warcurrent(url_war[3], datetime = datetime)
+
+db_warclan <- dplyr::bind_rows(db_checkpoint, warclan3e, warclan2e, warclan1e) %>% unique()
+db_warclan <- dplyr::arrange(db_warclan, datetime, desc(clan))
+
+saveRDS(db_warclan, "data/clan_warcurrent.rds")
