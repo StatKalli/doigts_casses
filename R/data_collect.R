@@ -118,41 +118,46 @@ data_warcurrent <- function(u, datetime){
 
   table <- raw_page %>% rvest::html_nodes("table") %>%
     rvest::html_table()
-  table <- as.data.frame(table[[2L]])
 
-  warclan <- data.frame(date = datetime,
-                        clan = clan_name,
-                        player = rep(NA, dim(table)[1]),
-                        role = NA,
-                        boat_attack = NA,
-                        repair = NA,
-                        fame = NA,
-                        contribution = NA)
+  if(length(table) > 0){
+    table <- as.data.frame(table[[2L]])
 
-  # Cleaning table
-  warclan[["player"]] <- strsplit(table[,2], "[\n]") %>%
-    get_into_list(1)
-  warclan[["player"]] <- gsub('\\[*email.protected*\\]', "M@", warclan[["player"]])
+    warclan <- data.frame(date = datetime,
+                          clan = clan_name,
+                          player = rep(NA, dim(table)[1]),
+                          role = NA,
+                          boat_attack = NA,
+                          repair = NA,
+                          fame = NA,
+                          contribution = NA)
 
-  warclan[["role"]] <- strsplit(table[,2], "[\n]") %>%
-    get_into_list(4)
+    # Cleaning table
+    warclan[["player"]] <- strsplit(table[,2], "[\n]") %>%
+      get_into_list(1)
+    warclan[["player"]] <- gsub('\\[*email.protected*\\]', "M@", warclan[["player"]])
 
-  warclan[["boat_attack"]] <- strsplit(table[,2], "[\n]") %>%
-    get_into_list(8)
+    warclan[["role"]] <- strsplit(table[,2], "[\n]") %>%
+      get_into_list(4)
 
-  warclan[["repair"]] <- strsplit(table[,2], "[\n]") %>%
-    get_into_list(9)
+    warclan[["boat_attack"]] <- strsplit(table[,2], "[\n]") %>%
+      get_into_list(8)
 
-  warclan[["fame"]] <- strsplit(table[,2], "[\n]") %>%
-    get_into_list(10)
+    warclan[["repair"]] <- strsplit(table[,2], "[\n]") %>%
+      get_into_list(9)
 
-  warclan[["contribution"]] <- strsplit(table[,2], "[\n]") %>%
-    get_into_list(11)
+    warclan[["fame"]] <- strsplit(table[,2], "[\n]") %>%
+      get_into_list(10)
 
-  warclan[["boat_attack"]] <- as.numeric(gsub(",", "", warclan[["boat_attack"]]))
-  warclan[["repair"]] <- as.numeric(gsub(",", "", warclan[["repair"]]))
-  warclan[["fame"]] <- as.numeric(gsub(",", "", warclan[["fame"]]))
-  warclan[["contribution"]] <- as.numeric(gsub(",", "", warclan[["contribution"]]))
+    warclan[["contribution"]] <- strsplit(table[,2], "[\n]") %>%
+      get_into_list(11)
+
+    warclan[["boat_attack"]] <- as.numeric(gsub(",", "", warclan[["boat_attack"]]))
+    warclan[["repair"]] <- as.numeric(gsub(",", "", warclan[["repair"]]))
+    warclan[["fame"]] <- as.numeric(gsub(",", "", warclan[["fame"]]))
+    warclan[["contribution"]] <- as.numeric(gsub(",", "", warclan[["contribution"]]))
+  } else {
+    warclan <- data.frame(NULL)
+  }
 
   warclan
 }
