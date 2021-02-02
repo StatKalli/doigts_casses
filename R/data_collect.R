@@ -60,7 +60,7 @@ clan2e <- data_players(url[2], datetime = datetime)
 clan1e <- data_players(url[3], datetime = datetime)
 
 db_clan <- unique(rbind(db_checkpoint, clan3e, clan2e, clan1e))
-db_clan <- dplyr::arrange(db_clan, datetime, desc(clan))
+db_clan <- dplyr::arrange(db_clan, date, desc(clan))
 
 saveRDS(db_clan, "data/clan_players.rds")
 
@@ -97,7 +97,7 @@ warclan2e <- data_warclan(url_war[2], datetime = datetime)
 warclan1e <- data_warclan(url_war[3], datetime = datetime)
 
 db_warclan <- dplyr::bind_rows(db_checkpoint, warclan3e, warclan2e, warclan1e) %>% unique()
-db_warclan <- dplyr::arrange(db_warclan, datetime, desc(clan))
+db_warclan <- dplyr::arrange(db_warclan, date, desc(clan))
 
 # check member
 maxdate <- max(db_clan$date)
@@ -109,6 +109,7 @@ saveRDS(db_warclan, "data/clan_wars.rds")
 # CURRENT WAR CLAN ----
 
 db_checkpoint <- readRDS("data/clan_warcurrent.rds")
+db_checkpoint2 <- readRDS("data/clan_warcurrent_race.rds")
 
 url_war <- paste0(url, '/war/race')
 
@@ -120,6 +121,13 @@ data_warcurrent <- function(u, datetime){
     rvest::html_table()
 
   if(length(table) > 0){
+
+    currentwar <-  as.data.frame(table[[1L]])
+    names(currentwar) <- c("clan", "clan_in_race", "repair", "fame", "trophy")
+    currentwar[["clan_in_race"]] <- gsub('\\[*email.protected*\\]', "", currentwar[["clan_in_race"]])
+    currentwar$clan <- clan_name
+    currentwar$date <- datetime
+
     table <- as.data.frame(table[[2L]])
 
     warclan <- data.frame(date = datetime,
@@ -156,17 +164,21 @@ data_warcurrent <- function(u, datetime){
     warclan[["fame"]] <- as.numeric(gsub(",", "", warclan[["fame"]]))
     warclan[["contribution"]] <- as.numeric(gsub(",", "", warclan[["contribution"]]))
   } else {
+    currentwar <- data.frame(NULL)
     warclan <- data.frame(NULL)
   }
 
-  warclan
+  list(warclan, currentwar)
 }
 
 warclan3e <- data_warcurrent(url_war[1], datetime = datetime)
 warclan2e <- data_warcurrent(url_war[2], datetime = datetime)
 warclan1e <- data_warcurrent(url_war[3], datetime = datetime)
 
-db_warclan <- dplyr::bind_rows(db_checkpoint, warclan3e, warclan2e, warclan1e) %>% unique()
+db_warclan <- dplyr::bind_rows(db_checkpoint, warclan3e[[1]], warclan2e[[1]], warclan1e[[1]]) %>% unique()
 db_warclan <- dplyr::arrange(db_warclan, datetime, desc(clan))
 
-saveRDS(db_warclan, "data/clan_warcurrent.rds")
+db_warcurr <- dplyr::bind_rows(db_checkpoint2, warclan3e[[2]], warclan2e[[2]], warclan1e[[2]]) %>% unique()
+db_warcurr <- dplyr::arrange(db_warcurr, date, desc(clan))
+
+saveRDS(db_warcurr, "data/clan_warcurrent_race.rds")
