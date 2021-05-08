@@ -8,7 +8,9 @@
 
 #name: R
 
-#on:
+on:
+ - name: message
+   run: echo "simple message"
 #  schedule:
 #    - cron: "*/45 * * * *"
 #  push:
